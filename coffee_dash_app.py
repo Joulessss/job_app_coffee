@@ -19,7 +19,7 @@ ALL_YEARS = service.available_years()
 LAST_HIST_YEAR = int(service.type_year["start_year"].max())
 ALL_COUNTRIES = sorted(service.coffee_long["country"].unique().tolist())
 
-app = Dash(__name__, title="Coffee Forecast Studio")
+app = Dash(__name__, title="Coffee Forecast Studio", suppress_callback_exceptions=True)
 server = app.server
 
 
@@ -424,6 +424,17 @@ def build_chat_layout() -> html.Div:
 
 # ─── App layout ────────────────────────────────────────────────────────────────
 
+def render_tab_content(active_tab: str) -> html.Div:
+    if active_tab == "overview":
+        return build_overview_layout()
+    if active_tab == "diagnostics":
+        return build_diagnostics_layout()
+    if active_tab == "forecast":
+        return build_forecast_layout()
+    if active_tab == "chat":
+        return build_chat_layout()
+    return build_overview_layout()
+
 app.layout = html.Div([
     # Hero banner
     html.Div([
@@ -448,11 +459,12 @@ app.layout = html.Div([
 
     # Tabs
     dcc.Tabs([
-        dcc.Tab(label="Overview", children=build_overview_layout(), className="tab", selected_className="tab--selected"),
-        dcc.Tab(label="Diagnostics", children=build_diagnostics_layout(), className="tab", selected_className="tab--selected"),
-        dcc.Tab(label="Forecast Lab", children=build_forecast_layout(), className="tab", selected_className="tab--selected"),
-        dcc.Tab(label="Analyst Chat", children=build_chat_layout(), className="tab", selected_className="tab--selected"),
-    ], className="tabs-container"),
+        dcc.Tab(label="Overview", value="overview", className="tab", selected_className="tab--selected"),
+        dcc.Tab(label="Diagnostics", value="diagnostics", className="tab", selected_className="tab--selected"),
+        dcc.Tab(label="Forecast Lab", value="forecast", className="tab", selected_className="tab--selected"),
+        dcc.Tab(label="Analyst Chat", value="chat", className="tab", selected_className="tab--selected"),
+    ], id="main-tabs", value="overview", className="tabs-container"),
+    html.Div(id="tab-content", children=render_tab_content("overview")),
 ], className="app-shell")
 
 
@@ -605,6 +617,13 @@ app.index_string = """
 
 
 # ─── Callbacks ─────────────────────────────────────────────────────────────────
+
+@app.callback(
+    Output("tab-content", "children"),
+    Input("main-tabs", "value"),
+)
+def update_tab_content(active_tab: str):
+    return render_tab_content(active_tab)
 
 @app.callback(
     Output("diagnostic-model-graph", "figure"),

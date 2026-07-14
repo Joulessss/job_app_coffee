@@ -47,6 +47,13 @@ def info_badge(text: str, color: str = "#5a341e") -> html.Span:
     return html.Span(text, className="info-badge", style={"background": color})
 
 
+def app_graph(figure, graph_id: str | None = None, height: int = 480) -> dcc.Graph:
+    kwargs = {"figure": figure, "className": "graph-inner", "config": {"responsive": False}}
+    if graph_id is not None:
+        kwargs["id"] = graph_id
+    return dcc.Graph(**kwargs, style={"height": f"{height}px", "width": "100%"})
+
+
 def pretty_name(name: str) -> str:
     return name.replace("_", " ").replace("yoy", "YoY").title()
 
@@ -152,7 +159,7 @@ def build_overview_layout() -> html.Div:
                     "Each line is one coffee variety; use the legend to isolate varieties.",
                     className="chart-desc",
                 ),
-                dcc.Graph(figure=service.historical_type_chart(), className="graph-inner"),
+                app_graph(service.historical_type_chart(), height=460),
             ], className="graph-panel"),
             html.Div([
                 html.H3("Geographic distribution of consumption", className="chart-title"),
@@ -161,7 +168,7 @@ def build_overview_layout() -> html.Div:
                     "Warmer tones indicate larger markets.",
                     className="chart-desc",
                 ),
-                dcc.Graph(figure=service.country_world_map(), className="graph-inner"),
+                app_graph(service.country_world_map(), height=460),
             ], className="graph-panel"),
         ], className="two-col"),
         html.Div([
@@ -170,7 +177,7 @@ def build_overview_layout() -> html.Div:
                 "Largest consumers for each coffee variety. Country concentration is a key supply-chain risk indicator.",
                 className="chart-desc",
             ),
-            dcc.Graph(figure=service.top_countries_chart(), className="graph-inner"),
+            app_graph(service.top_countries_chart(), height=760),
         ], className="graph-panel"),
     ])
 
@@ -194,7 +201,7 @@ def build_diagnostics_layout() -> html.Div:
                     "A large gap signals overfitting.",
                     className="chart-desc",
                 ),
-                dcc.Graph(figure=service.train_test_rmse_chart(), className="graph-inner"),
+                app_graph(service.train_test_rmse_chart(), height=420),
             ], className="panel"),
             html.Div([
                 html.H3("MAPE heatmap — model × variety", className="chart-title"),
@@ -204,7 +211,7 @@ def build_diagnostics_layout() -> html.Div:
                     "Each cell reveals which model handles a variety best.",
                     className="chart-desc",
                 ),
-                dcc.Graph(figure=service.metrics_heatmap(), className="graph-inner"),
+                app_graph(service.metrics_heatmap(), height=420),
             ], className="panel"),
         ], className="two-col"),
 
@@ -217,7 +224,7 @@ def build_diagnostics_layout() -> html.Div:
                     "Varieties with high MAPE across all models are inherently volatile — not a model failure.",
                     className="chart-desc",
                 ),
-                dcc.Graph(figure=service.test_mape_by_type_chart(), className="graph-inner"),
+                app_graph(service.test_mape_by_type_chart(), height=420),
             ], className="panel"),
             html.Div([
                 html.H3("Why some varieties are harder to forecast", className="chart-title"),
@@ -226,7 +233,7 @@ def build_diagnostics_layout() -> html.Div:
                     "Average YoY growth swing (right) shows how sharply trends reverse year-to-year.",
                     className="chart-desc",
                 ),
-                dcc.Graph(figure=service.forecast_risk_chart(), className="graph-inner"),
+                app_graph(service.forecast_risk_chart(), height=420),
                 html.Ul(
                     [html.Li(note, className="insight-item") for note in service.forecast_risk_notes()],
                     className="insights-list",
@@ -261,7 +268,7 @@ def build_diagnostics_layout() -> html.Div:
                     ),
                 ], style={"flex": "1"}),
             ], className="dropdown-row"),
-            dcc.Graph(id="diagnostic-model-graph", figure=service.prediction_vs_actual_chart("ARIMA", None)),
+            app_graph(service.prediction_vs_actual_chart("ARIMA", None), graph_id="diagnostic-model-graph", height=620),
         ], className="panel"),
     ])
 
@@ -333,9 +340,11 @@ def build_forecast_layout() -> html.Div:
                 "The projection extends to the selected target year.",
                 className="chart-desc",
             ),
-            dcc.Graph(id="future-forecast-graph",
-                      figure=service.forecast_chart("ARIMA", ALL_YEARS.index(default_year) - ALL_YEARS.index(LAST_HIST_YEAR)),
-                      className="graph-inner"),
+            app_graph(
+                service.forecast_chart("ARIMA", ALL_YEARS.index(default_year) - ALL_YEARS.index(LAST_HIST_YEAR)),
+                graph_id="future-forecast-graph",
+                height=620,
+            ),
         ], className="graph-panel"),
 
         dcc.Store(id="last-forecast-store"),
@@ -524,9 +533,10 @@ app.index_string = """
       .card-subtitle { margin-top: 6px; color: var(--brown-500); font-size: 13px; }
 
       /* Panels */
-      .panel { background: var(--cream-card); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); margin-bottom: 18px; }
-      .graph-panel { background: var(--cream-card); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); margin-bottom: 18px; }
-      .graph-inner { width: 100%; }
+      .panel { background: var(--cream-card); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); margin-bottom: 18px; overflow: hidden; }
+      .graph-panel { background: var(--cream-card); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); margin-bottom: 18px; overflow: hidden; }
+      .graph-inner { width: 100%; min-height: 320px; max-height: 800px; overflow: hidden; }
+      .graph-inner .js-plotly-plot, .graph-inner .plot-container, .graph-inner .svg-container { height: 100% !important; width: 100% !important; }
       .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 0; }
 
       /* Chart labels */

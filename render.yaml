@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: job-app-coffee
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn api.index:app

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from dash import Dash, Input, Output, State, dash_table, dcc, html, no_update, ctx
 import pandas as pd
 
@@ -734,4 +736,8 @@ def fill_example(*_clicks):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 8050)),
+        debug=False,
+    )

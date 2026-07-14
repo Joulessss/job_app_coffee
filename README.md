@@ -44,10 +44,16 @@ The product supports three main workflows:
   - overview, diagnostics, forecast lab, and analyst chat tabs
 
 - `api/index.py`
-  - Vercel Python entrypoint
+  - Python app entrypoint for deployment
 
 - `vercel.json`
-  - routes all requests to the Python app on Vercel
+  - Vercel routing config
+
+- `Procfile`
+  - process definition for platforms like Render
+
+- `render.yaml`
+  - Render service configuration
 
 - `requirements.txt`
   - Python dependencies for deployment
@@ -187,7 +193,7 @@ For public deployment:
 - set `OPENAI_API_KEY`, `OPENAI_MODEL`, and optionally `NIXTLA_API_KEY` in the hosting platform environment settings
 - keep `.env.example` in the repository as the template
 
-If you deploy on Vercel, configure the environment variables in the Vercel project settings instead of storing secrets in the repository.
+If you deploy on Render or Vercel, configure the environment variables in the platform settings instead of storing secrets in the repository.
 
 ### Vercel configuration included
 
@@ -198,6 +204,24 @@ This repository now includes:
 - `requirements.txt`
 
 These files are needed so Vercel knows how to run the Python app instead of returning `404 NOT_FOUND`.
+
+### Render configuration included
+
+This repository also includes:
+
+- `Procfile`
+- `render.yaml`
+
+The production start command is:
+
+```bash
+gunicorn api.index:app
+```
+
+The Dash app is configured to bind to:
+
+- host `0.0.0.0`
+- port from `PORT`
 
 ## Recommended Repository Contents
 
@@ -221,4 +245,4 @@ Do not commit:
 - `TimeGPT` requires external API access and cannot be validated in a network-restricted environment
 - `XGBoost` live cached inference is currently excluded from the dashboard forecast controls due to a native runtime issue in this environment
 - uploaded data retrains backend state at runtime, so startup caching is only guaranteed for the default local dataset
-- this stack is heavy for Vercel serverless deployment because it includes `torch`, `xgboost`, and cached ML artifacts; if Vercel build or runtime limits become a blocker, a platform like Render or Railway is a better fit
+- this stack is heavy for Vercel serverless deployment because it includes `torch`, `xgboost`, and cached ML artifacts; Render or Railway is the better fit for the full app

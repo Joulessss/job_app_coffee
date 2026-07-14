@@ -1,0 +1,21 @@
+country,coffee_type,country_type_consumption,country_total_consumption,coffee_type_share_in_country
+Ethiopia,Arabica,4536540000,4536540000,1.0
+Colombia,Arabica,2536776384,2536776384,1.0
+Venezuela,Arabica,2386067999,2386067999,1.0
+Costa Rica,Arabica,665335200,665335200,1.0
+Haiti,Arabica,600600000,600600000,1.0
+Brazil,Arabica/Robusta,27824700000,27824700000,1.0
+Mexico,Arabica/Robusta,3189660000,3189660000,1.0
+Dominican Republic,Arabica/Robusta,642823380,642823380,1.0
+Guatemala,Arabica/Robusta,590880000,590880000,1.0
+Ecuador,Arabica/Robusta,381540000,381540000,1.0
+Madagascar,Robusta,588705960,588705960,1.0
+Côte d'Ivoire,Robusta,410260140,410260140,1.0
+Lao People's Democratic Republic,Robusta,157980000,157980000,1.0
+Guinea,Robusta,86730000,86730000,1.0
+Nigeria,Robusta,70740000,70740000,1.0
+Indonesia,Robusta/Arabica,4920480000,4920480000,1.0
+Philippines,Robusta/Arabica,2807280000,2807280000,1.0
+India,Robusta/Arabica,2093460000,2093460000,1.0
+Viet Nam,Robusta/Arabica,1920928320,1920928320,1.0
+Thailand,Robusta/Arabica,1248600000,1248600000,1.0

@@ -43,6 +43,15 @@ The product supports three main workflows:
   - Dash application
   - overview, diagnostics, forecast lab, and analyst chat tabs
 
+- `api/index.py`
+  - Vercel Python entrypoint
+
+- `vercel.json`
+  - routes all requests to the Python app on Vercel
+
+- `requirements.txt`
+  - Python dependencies for deployment
+
 - `coffee_db.parquet`
   - source dataset
 
@@ -180,6 +189,16 @@ For public deployment:
 
 If you deploy on Vercel, configure the environment variables in the Vercel project settings instead of storing secrets in the repository.
 
+### Vercel configuration included
+
+This repository now includes:
+
+- `api/index.py`
+- `vercel.json`
+- `requirements.txt`
+
+These files are needed so Vercel knows how to run the Python app instead of returning `404 NOT_FOUND`.
+
 ## Recommended Repository Contents
 
 Commit:
@@ -202,3 +221,4 @@ Do not commit:
 - `TimeGPT` requires external API access and cannot be validated in a network-restricted environment
 - `XGBoost` live cached inference is currently excluded from the dashboard forecast controls due to a native runtime issue in this environment
 - uploaded data retrains backend state at runtime, so startup caching is only guaranteed for the default local dataset
+- this stack is heavy for Vercel serverless deployment because it includes `torch`, `xgboost`, and cached ML artifacts; if Vercel build or runtime limits become a blocker, a platform like Render or Railway is a better fit

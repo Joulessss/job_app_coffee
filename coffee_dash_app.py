@@ -54,6 +54,14 @@ def app_graph(figure, graph_id: str | None = None, height: int = 480) -> dcc.Gra
     return dcc.Graph(**kwargs, style={"height": f"{height}px", "width": "100%"})
 
 
+def facet_height(coffee_type: str | None) -> int:
+    """Match the height prediction_vs_actual_chart/forecast_chart bake into the
+    figure itself (single variety vs the 2x2 all-varieties grid). The container
+    is not responsive, so its style height must track this or Plotly renders
+    taller than the box and the bottom row gets clipped by overflow:hidden."""
+    return 480 if coffee_type else 780
+
+
 def pretty_name(name: str) -> str:
     return name.replace("_", " ").replace("yoy", "YoY").title()
 
@@ -111,13 +119,12 @@ def df_table(df: pd.DataFrame, table_id: str) -> dash_table.DataTable:
 
 def chat_bubble(role: str, content: str) -> html.Div:
     is_user = role == "user"
-    return html.Div(
-        html.Div(
-            content,
-            className="bubble-user" if is_user else "bubble-assistant",
-        ),
-        className="chat-row-user" if is_user else "chat-row-assistant",
+    bubble = (
+        html.Div(content, className="bubble-user")
+        if is_user
+        else dcc.Markdown(content, className="bubble-assistant", link_target="_blank")
     )
+    return html.Div(bubble, className="chat-row-user" if is_user else "chat-row-assistant")
 
 
 # ─── Tab layouts ───────────────────────────────────────────────────────────────
@@ -268,7 +275,7 @@ def build_diagnostics_layout() -> html.Div:
                     ),
                 ], style={"flex": "1"}),
             ], className="dropdown-row"),
-            app_graph(service.prediction_vs_actual_chart("ARIMA", None), graph_id="diagnostic-model-graph", height=620),
+            app_graph(service.prediction_vs_actual_chart("ARIMA", None), graph_id="diagnostic-model-graph", height=facet_height(None)),
         ], className="panel"),
     ])
 
@@ -343,7 +350,7 @@ def build_forecast_layout() -> html.Div:
             app_graph(
                 service.forecast_chart("ARIMA", ALL_YEARS.index(default_year) - ALL_YEARS.index(LAST_HIST_YEAR)),
                 graph_id="future-forecast-graph",
-                height=620,
+                height=facet_height(None),
             ),
         ], className="graph-panel"),
     ])
@@ -587,11 +594,27 @@ app.index_string = """
       /* Assistant message — left aligned */
       .chat-row-assistant { display: flex; justify-content: flex-start; }
       .bubble-assistant {
-        background: var(--cream-card); color: var(--brown-900); padding: 10px 16px;
+        background: var(--cream-card); color: var(--brown-900); padding: 12px 18px;
         border-radius: 18px 18px 18px 4px; max-width: 82%; font-size: 14px;
-        line-height: 1.65; white-space: pre-wrap; box-shadow: 0 2px 8px rgba(73,43,18,.08);
+        line-height: 1.65; box-shadow: 0 2px 8px rgba(73,43,18,.08);
         border: 1px solid var(--brown-100);
       }
+      .bubble-assistant > *:first-child { margin-top: 0; }
+      .bubble-assistant > *:last-child { margin-bottom: 0; }
+      .bubble-assistant p { margin: 0 0 10px; }
+      .bubble-assistant strong { color: var(--brown-700); font-weight: 700; }
+      .bubble-assistant ul, .bubble-assistant ol { margin: 0 0 10px; padding-left: 20px; }
+      .bubble-assistant li { margin-bottom: 4px; }
+      .bubble-assistant li > p { margin-bottom: 4px; }
+      .bubble-assistant h1, .bubble-assistant h2, .bubble-assistant h3, .bubble-assistant h4 {
+        font-family: Georgia, serif; font-size: 14.5px; font-weight: 700; color: var(--brown-700);
+        margin: 14px 0 6px;
+      }
+      .bubble-assistant code {
+        background: var(--brown-100); color: var(--brown-700); padding: 1px 5px;
+        border-radius: 4px; font-size: 12.5px;
+      }
+      .bubble-assistant a { color: var(--green-accent); }
       .chat-thinking {
         background: var(--brown-100); color: var(--brown-400); padding: 10px 16px;
         border-radius: 18px; font-size: 13px; font-style: italic; max-width: 200px;
@@ -640,15 +663,20 @@ def update_tab_content(active_tab: str):
 
 @app.callback(
     Output("diagnostic-model-graph", "figure"),
+    Output("diagnostic-model-graph", "style"),
     Input("diagnostic-model-dropdown", "value"),
     Input("diagnostic-type-dropdown", "value"),
 )
 def update_diagnostic_graph(model_name: str, coffee_type: str):
-    return service.prediction_vs_actual_chart(model_name, None if coffee_type == "ALL" else coffee_type)
+    resolved_type = None if coffee_type == "ALL" else coffee_type
+    fig = service.prediction_vs_actual_chart(model_name, resolved_type)
+    style = {"height": f"{facet_height(resolved_type)}px", "width": "100%"}
+    return fig, style
 
 
 @app.callback(
     Output("future-forecast-graph", "figure"),
+    Output("future-forecast-graph", "style"),
     Output("forecast-point-table", "children"),
     Output("forecast-summary-title", "children"),
     Output("forecast-summary-desc", "children"),
@@ -662,6 +690,7 @@ def update_diagnostic_graph(model_name: str, coffee_type: str):
 def run_forecast(_n: int | None, model_name: str, target_year: int, coffee_type: str):
     # Horizon = how many years beyond last historical year
     horizon = max(1, target_year - LAST_HIST_YEAR) if target_year > LAST_HIST_YEAR else 1
+    resolved_type = None if coffee_type == "ALL" else coffee_type
 
     # Point prediction table for selected year
     point = service.get_year_prediction(model_name, target_year)
@@ -669,7 +698,8 @@ def run_forecast(_n: int | None, model_name: str, target_year: int, coffee_type:
         point = point[point["coffee_type"] == coffee_type].copy()
 
     # Trend chart showing history + projection up to target year
-    fig = service.forecast_chart(model_name, horizon, None if coffee_type == "ALL" else coffee_type)
+    fig = service.forecast_chart(model_name, horizon, resolved_type)
+    style = {"height": f"{facet_height(resolved_type)}px", "width": "100%"}
 
     is_future = target_year > LAST_HIST_YEAR
     period_label = f"{target_year}/{str((target_year + 1) % 100).zfill(2)}"
@@ -684,7 +714,7 @@ def run_forecast(_n: int | None, model_name: str, target_year: int, coffee_type:
 
     table_cols = ["coffee_type", "prediction", "actual", "error_pct", "split"] if not is_future else ["coffee_type", "prediction", "split"]
     table_df = point[[c for c in table_cols if c in point.columns]]
-    return fig, df_table(table_df, "forecast-point-datatable"), title, desc, point.to_dict("records")
+    return fig, style, df_table(table_df, "forecast-point-datatable"), title, desc, point.to_dict("records")
 
 
 # ── Chat ──────────────────────────────────────────────────────────────────────

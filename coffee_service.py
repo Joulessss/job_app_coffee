@@ -801,7 +801,11 @@ class CoffeeAnalystLLM:
             "Answer only from the supplied data and model outputs. "
             "Explain tradeoffs, uncertainty, model limitations, and which coffee types or countries appear riskier. "
             "If the user asks for an economic or production suggestion, ground it in the provided metrics, diagnostics, "
-            "country concentration, and forecast context. Do not invent unsupported facts."
+            "country concentration, and forecast context. Do not invent unsupported facts. "
+            "This answer renders inside a compact chat bubble, not a report: keep it scannable. "
+            "Prefer short paragraphs and tight bullet lists over long prose. Use bold only for the handful of numbers "
+            "or terms that matter most. Do not use markdown headers (#, ##) — a bubble doesn't need document "
+            "structure. Skip generic preambles and restating the question; open with the answer."
         )
         user_prompt = (
             f"Question: {question}\n\n"

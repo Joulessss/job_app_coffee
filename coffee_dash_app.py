@@ -346,8 +346,6 @@ def build_forecast_layout() -> html.Div:
                 height=620,
             ),
         ], className="graph-panel"),
-
-        dcc.Store(id="last-forecast-store"),
     ])
 
 
@@ -384,7 +382,7 @@ def build_chat_layout() -> html.Div:
                 value="NONE", clearable=False, className="styled-dropdown",
                 style={"maxWidth": "340px"},
             ),
-        ], className="panel", style={"marginBottom": "16px"}),
+        ], className="panel", style={"marginBottom": "16px", "overflow": "visible"}),
 
         # Chat window + input
         html.Div([
@@ -474,6 +472,11 @@ app.layout = html.Div([
         dcc.Tab(label="Analyst Chat", value="chat", className="tab", selected_className="tab--selected"),
     ], id="main-tabs", value="overview", className="tabs-container"),
     html.Div(id="tab-content", children=render_tab_content("overview")),
+
+    # Shared across tabs — must live at the top level so it still exists in the
+    # DOM (and is readable by the Analyst Chat callback) when the Forecast Lab
+    # tab isn't the one currently mounted.
+    dcc.Store(id="last-forecast-store"),
 ], className="app-shell")
 
 
@@ -651,9 +654,9 @@ def update_diagnostic_graph(model_name: str, coffee_type: str):
     Output("forecast-summary-desc", "children"),
     Output("last-forecast-store", "data"),
     Input("run-forecast", "n_clicks"),
-    State("forecast-model-dropdown", "value"),
-    State("forecast-year-dropdown", "value"),
-    State("forecast-type-dropdown", "value"),
+    Input("forecast-model-dropdown", "value"),
+    Input("forecast-year-dropdown", "value"),
+    Input("forecast-type-dropdown", "value"),
     prevent_initial_call=False,
 )
 def run_forecast(_n: int | None, model_name: str, target_year: int, coffee_type: str):

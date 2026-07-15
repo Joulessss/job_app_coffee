@@ -593,7 +593,9 @@ class ForecastingService:
             markers=True,
         )
         fig.update_yaxes(tickformat=".3s", title_text="Consumption (bags)")
-        fig.update_xaxes(title_text="Year")
+        # Only label x-axes that actually show tick labels (bottom row in a facet
+        # grid) — labelling every facet's x-axis overlaps the row below's titles.
+        fig.for_each_xaxis(lambda ax: ax.update(title_text="Year") if ax.showticklabels is not False else None)
         # Strip "coffee_type=Arabica" → "Arabica" from facet panel titles
         fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
         fig.update_layout(
@@ -628,7 +630,9 @@ class ForecastingService:
             color_discrete_map={"Historical": "#374151", f"{model_name} Forecast": "#b45309"},
         )
         fig.update_yaxes(tickformat=".3s", title_text="Consumption (bags)")
-        fig.update_xaxes(title_text="Year")
+        # Only label x-axes that actually show tick labels (bottom row in a facet
+        # grid) — labelling every facet's x-axis overlaps the row below's titles.
+        fig.for_each_xaxis(lambda ax: ax.update(title_text="Year") if ax.showticklabels is not False else None)
         # Strip "coffee_type=Arabica" → "Arabica" from facet panel titles
         fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
         fig.update_layout(
